@@ -742,3 +742,126 @@ graph LR;
 5. Снова добавили в staging area с помощью ```git add```. Состояния: ```staged``` (+ ```tracked```).
 6. Сделали коммит. Состояния: ```tracked```.
 7. Повторили пункты 4−7 много-много раз.
+
+# Чтение статусов git status
+
+```git status``` показывает только следующие состояния файлов:
+* ```staged``` (```Changes to be committed``` в выводе ```git status```);
+* ```modified``` (```Changes not staged for commit```);
+* ```untracked``` (```Untracked files```).
+
+
+## Типичные варианты вывода git status
+
+1. Нет ни ```staged-```, ни ```modified-```, ни ```untracked```-файлов.
+
+Если ничего не менять в репозитории после первого коммита, то в нём не должно быть ни изменённых файлов (modified), ни новых (untracked), ни добавленных в список на коммит (staged). 
+
+Вызовите команду git status. Её вывод будет примерно таким.
+```
+$ git status
+On branch master
+nothing to commit, working tree clean 
+```
+ 
+Это означает, что в репозитории нет новых или изменённых файлов. Последняя строка ```nothing to commit, working tree clean``` буквально переводится как «нечего коммитить, рабочая директория чиста».
+
+Первая строка ```On branch master сообщает```, что текущая ветка — ```master```.
+
+2. Найдены неотслеживаемые файлы.
+
+Если в репозитории создать новый файл и выполнить ```git status```, то созданный файл выведется в состоянии ```untracked```
+```
+$ touch fileA.txt
+$ git status
+On branch master
+Untracked files: # найдены неотслеживаемые файлы
+  (use "git add <file>..." to include in what will be committed)
+        fileA.txt
+
+nothing added to commit but untracked files present (use "git add" to track)
+```
+
+💡 Обратите внимание: в самом выводе ```git status``` есть подсказка, какую команду использовать, чтобы добавить файл в список на коммит: ```Use git add <file> to include in what will be committed`` (англ. «используйте git add <file>, чтобы добавить в список на коммит»).
+
+Если затем файл добавить в staging area с помощью ```git add``` и снова запросите ```git status```.
+
+```
+$ git add fileA.txt 
+$ git status
+On branch master
+Changes to be committed: # новая секция
+  (use "git restore --staged <file>..." to unstage)
+        new file:   fileA.txt 
+```
+
+Теперь файл находится в секции ```Changes to be committed``` (англ. «изменения, которые попадут в коммит»). Если сейчас выполнить коммит, то в репозитории будет зафиксирована текущая версия этого файла. 
+
+```
+$ git commit -m 'Добавить файл fileA.txt'
+# тут будет вывод комманды commit, он нас не интересует
+$ git status
+On branch master
+nothing to commit, working tree clean 
+```
+
+Вывод команды git status такой же, какой был после первого коммита: «Директория чиста».
+
+
+3. Найдены изменения, которые не войдут в коммит
+
+Если отредактировав файл, выполнить ```git status```
+
+```
+# внесли в fileA.txt правки
+# запросили статус
+$ git status 
+On branch master
+Changes not staged for commit: # ещё одна секция
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   fileA.txt
+```
+
+Файл был изменён, но ещё не добавлен в staging area после этого. Так он оказался в секции ```Changes not staged for commit``` (англ. «изменения, которые не подготовлены к коммиту»). Эта секция соответствует статусу ```modified```.
+
+Выполнить затем ```git add```, получиться 
+
+```
+$ git add fileA.txt
+$ git status
+On branch master
+Changes to be committed: # все изменения готовы к коммиту
+  (use "git restore --staged <file>..." to unstage)
+        modified:   fileA.txt
+```
+
+Теперь в коммит попадёт уже новая версия файла.
+
+💡 Обратите внимание: хотя вывод команды ```git status``` очень похож на тот, который был после первого добавления файла, они всё же отличаются.
+
+Когда совсем новый файл попадает в staging area, перед его названием указывается ```new file```. Вот так: ```new file: fileA.txt```.
+
+Если файл уже однажды попадал в историю (с помощью коммита) и был изменён, после выполнения ```git add``` он будет записан уже так: ```modified: fileA.txt```.
+
+4. Файл добавлен в staging area, но после этого изменён
+
+Если в добавленный в staged area файл внести изменения и вызвать  ```git status```, покажет следующее
+
+```
+# изменили fileA.txt
+$ git status
+On branch master
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+          modified:   fileA.txt
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+          modified:   fileA.txt
+```
+
+Файл попал и в ```staged (Changes to be committed)```, и в ```modified (Changes not staged for commit)```. В staging area находится версия файла до редактирования, а в ```Changes not staged for commit``` — уже изменённая версия.
+
+Чтобы закоммитить самую свежую версию файла, нужно снова выполнить ```git add``` перед коммитом.
